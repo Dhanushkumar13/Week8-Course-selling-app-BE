@@ -2,8 +2,9 @@ const jwt = require('jsonwebtoken');
 const {JWT_SECRET_ADMIN} = require('../config');
 
 function adminAuthMiddleware(req,res,next){
-    const token = req.headers.token;
-    const decoded = jwt.verify(token, JWT_SECRET_ADMIN);
+    try {
+        const token = req.headers.token;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_ADMIN);
 
     if(decoded){
         req.userId = decoded.id;
@@ -11,6 +12,11 @@ function adminAuthMiddleware(req,res,next){
     }else{
         res.status(403).json({
             message: "You are not logged in"
+        })
+    }
+    } catch (error) {
+        res.json({
+            message: "Error: " + error
         })
     }
 }

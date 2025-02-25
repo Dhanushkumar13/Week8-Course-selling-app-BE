@@ -61,18 +61,18 @@ adminRouter.post('/signin', async(req,res)=>{
     })
 
     if(!user){
-        json.status(403).json({
+        res.status(403).json({
             message: "User not found"
         })
     }
-
     const convertedPassword = await bcrypt.compare(password, user.password);
-    console.log(password, user.password);
+    console.log(password);
+    console.log(user.password)
 
     if(convertedPassword){
         const token = jwt.sign({
             id: user._id.toString()
-        },JWT_SECRET_ADMIN)
+        },process.env.JWT_SECRET_ADMIN)
         res.json({
             token: token
         })

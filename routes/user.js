@@ -1,10 +1,10 @@
-const { parse } = require('dotenv');
 const {Router} = require('express');
 const {z} = require('zod');
 const bcrypt = require('bcrypt');
-const {adminModel, userModel} = require('../db');
+const {adminModel, userModel, purchaseModel, courseModel} = require('../db');
 const jwt = require('jsonwebtoken')
-const {JWT_SECRET} = require('../config')
+// const {JWT_SECRET} = require('../config')
+const {userAuthMiddleware} = require('../auth/userAuth');
 
 const userRouter = Router();
 
@@ -55,7 +55,7 @@ userRouter.post('/login', async(req,res)=>{
     }
 })
 
-userRouter.post('/signin', async(req,res)=>{
+userRouter.post('/signin',userAuthMiddleware, async(req,res)=>{
     const email = req.body.email;
     const password = req.body.password;
 
@@ -75,7 +75,7 @@ userRouter.post('/signin', async(req,res)=>{
     if(convertedPassword){
         const token = jwt.sign({
             id: user._id.toString()
-        },JWT_SECRET)
+        },process.env.JWT_SECRET_ADMIN)
         res.json({
             token: token
         })
@@ -87,12 +87,23 @@ userRouter.post('/signin', async(req,res)=>{
     
 })
 
-userRouter.get('/purhases', async(req,res)=>{
+userRouter.get('/purchases',userAuthMiddleware, async(req,res)=>{
+    const userId = req.userId;
+    const courseId = req.body.courseId;
+
+    const purchases = await purchaseModel.find({
+        userId,
+    })
+
+    const coursesData = await courseModel.find({
+        _id: {$in: purchases.map(x => x.courseId)}
+    })
+    
     res.json({
-        message: "signup endpoint"
+        purchases,
+        coursesData
     })
 })
-
 
 module.exports={
     userRouter: userRouter
